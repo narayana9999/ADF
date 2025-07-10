@@ -1,0 +1,36 @@
+{
+  "name": "ProductCopyPipeline",
+  "properties": {
+    "parameters": {
+      "customerCount": {
+        "type": "Int"
+      }
+    },
+    "activities": [
+      {
+        "name": "CheckProductThreshold",
+        "type": "IfCondition",
+        "typeProperties": {
+          "expression": {
+            "value": "@greaterOrEquals(pipeline().parameters.customerCount, 600)",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [
+            {
+              "name": "CopyProductData",
+              "type": "Copy",
+              "typeProperties": {
+                "source": {
+                  "type": "SqlSource"
+                },
+                "sink": {
+                  "type": "AzureBlobSink"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "CustomerCopyPipeline",
+  "properties": {
+    "activities": [
+      {
+        "name": "GetCustomerCount",
+        "type": "Lookup",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "SELECT COUNT(*) AS TotalCount FROM Customers"
+          }
+        }
+      },
+      {
+        "name": "CheckCustomerThreshold",
+        "type": "IfCondition",
+        "typeProperties": {
+          "expression": {
+            "value": "@greater(activity('GetCustomerCount').output.firstRow.TotalCount, 500)",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [
+            {
+              "name": "CopyCustomerData",
+              "type": "Copy",
+              "typeProperties": {
+                "source": {
+                  "type": "SqlSource"
+                },
+                "sink": {
+                  "type": "AzureBlobSink"
+                }
+              }
+            },
+            {
+              "name": "CallProductPipeline",
+              "type": "ExecutePipeline",
+              "typeProperties": {
+                "pipeline": {
+                  "referenceName": "ProductCopyPipeline",
+                  "type": "PipelineReference"
+                },
+                "parameters": {
+                  "customerCount": "@activity('GetCustomerCount').output.firstRow.TotalCount"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
